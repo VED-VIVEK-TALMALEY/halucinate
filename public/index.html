@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HalluciNet — AI Hallucination Detection</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:          #0a0a0a;
+    --surface:     #111111;
+    --surface2:    #181818;
+    --border:      #222222;
+    --gold:        #c8a96e;
+    --gold-light:  #e8c98e;
+    --gold-dim:    #6b5535;
+    --red:         #e05c5c;
+    --green:       #5ce08a;
+    --amber:       #e0b45c;
+    --text:        #f0ece4;
+    --text-muted:  #7a7672;
+    --text-sub:    #4a4846;
+    --radius:      12px;
+    --radius-lg:   20px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; overflow-x: hidden; }
+  
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; background: rgba(10,10,10,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+  .nav-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; color: var(--gold); letter-spacing: -0.5px; }
+
+  section { position: relative; z-index: 1; padding: 96px 48px; max-width: 1200px; margin: 0 auto; }
+  .section-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+
+  .detector-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 48px; }
+  .detector-input-area { padding: 32px; }
+  .detector-textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; color: var(--text); font-family: 'DM Sans', sans-serif; resize: vertical; min-height: 80px; margin-bottom: 16px; outline: none; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+
+  .api-config { background: var(--surface2); border: 1px solid var(--gold-dim); padding: 20px; border-radius: var(--radius); margin-bottom: 24px; }
+  .api-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; color: var(--gold); font-family: 'DM Mono', monospace; font-size: 12px; outline: none; margin-top: 8px; }
+
+  .btn-primary { background: var(--gold); color: var(--bg); border: none; padding: 12px 32px; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; transition: 0.2s; }
+  .btn-primary:hover { background: var(--gold-light); }
+
+  .report-display { font-family: 'DM Mono', monospace; font-size: 13px; line-height: 1.6; color: #c8c0b4; white-space: pre-wrap; background: var(--bg); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); margin: 32px; display: none; }
+  
+  table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 13px; }
+  th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">HallucinNet</div>
+</nav>
+
+<section style="padding-top: 140px;">
+  <div class="section-eyebrow">BYOK Mode (Gemini Free Tier)</div>
+  <h2 class="section-title">Deep Model Auditing</h2>
+  
+  <div class="api-config">
+    <label style="color: var(--gold)">Google Gemini API Key (Required)</label>
+    <input type="password" class="api-input" id="apiKey" placeholder="AIzaSy..." />
+    <p style="font-size: 10px; color: var(--text-sub); margin-top: 8px;">
+      Get your free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--gold)">Google AI Studio</a>. 
+      Supports 15 requests per minute for free.
+    </p>
+  </div>
+
+  <div class="detector-card">
+    <div class="detector-input-area">
+      <label>User Prompt</label>
+      <textarea class="detector-textarea" id="userPrompt" placeholder="Question asked to the models..."></textarea>
+      <div class="grid-2">
+        <div><label>GPT-4o</label><textarea class="detector-textarea" id="gpt4o" placeholder="Paste response..."></textarea></div>
+        <div><label>Gemini</label><textarea class="detector-textarea" id="gemini" placeholder="Paste response..."></textarea></div>
+        <div><label>Claude</label><textarea class="detector-textarea" id="claude" placeholder="Paste response..."></textarea></div>
+        <div><label>Llama</label><textarea class="detector-textarea" id="llama" placeholder="Paste response..."></textarea></div>
+      </div>
+      <button class="btn-primary" onclick="runAudit()">Run 7-Step Deep Audit →</button>
+    </div>
+    <div class="report-display" id="reportDisplay"></div>
+  </div>
+
+  <div id="history">
+    <div class="section-eyebrow">Audit Logs</div>
+    <table id="historyTable">
+      <thead>
+        <tr><th>Date</th><th>Input</th><th>Score</th><th>Status</th></tr>
+      </thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+async function runAudit() {
+  const apiKey = document.getElementById('apiKey').value;
+  if (!apiKey) { alert('Please enter your Google Gemini API Key for real analysis.'); return; }
+
+  const data = {
+    apiKey: apiKey,
+    userPrompt: document.getElementById('userPrompt').value,
+    gpt4o: document.getElementById('gpt4o').value,
+    gemini: document.getElementById('gemini').value,
+    claude: document.getElementById('claude').value,
+    llama: document.getElementById('llama').value
+  };
+
+  const reportEl = document.getElementById('reportDisplay');
+  reportEl.style.display = 'block';
+  reportEl.textContent = 'Contacting Gemini Analysis Engine (Step 1 of 7)...';
+
+  try {
+    const res = await fetch('/api/analyze-comparison', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (result.error) throw new Error(result.error);
+    reportEl.textContent = result.report;
+    loadHistory();
+  } catch (e) {
+    reportEl.textContent = 'Audit Failed: ' + e.message;
+  }
+}
+
+async function loadHistory() {
+  const res = await fetch('/api/history');
+  const data = await res.json();
+  const tbody = document.getElementById('historyBody');
+  tbody.innerHTML = '';
+  data.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(r.created_at).toLocaleTimeString()}</td>
+      <td>${r.input.substring(0, 50)}...</td>
+      <td style="color: var(--gold)">${r.score}%</td>
+      <td>Deep Audit (Gemini)</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.onload = loadHistory;
+</script>
+</body>
+</html>

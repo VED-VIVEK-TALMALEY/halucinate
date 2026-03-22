@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.db
+hallucinet.db
+uploads/
+package-lock.json
