@@ -4,6 +4,7 @@ const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
 const Database = require('better-sqlite3');
+const escapeHtml = require('escape-html');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -53,17 +54,24 @@ app.post('/api/analyze-comparison', async (req, res) => {
   const effectiveKey = apiKey || process.env.GEMINI_API_KEY;
 
   if (!effectiveKey || effectiveKey === 'your_key_here') {
-    return res.status(400).json({ error: "No Google Gemini API Key provided. Please enter a key from Google AI Studio in the settings panel." });
+    return res.status(400).json({ error: "No Google Gemini API Key provided." });
   }
+
+  // Sanitization: Escape inputs before constructing prompt for AI
+  const cleanPrompt = escapeHtml(userPrompt || '');
+  const cleanGpt = escapeHtml(gpt4o || '');
+  const cleanGem = escapeHtml(gemini || '');
+  const cleanCla = escapeHtml(claude || '');
+  const cleanLla = escapeHtml(llama || '');
 
   const fullInput = `
 ${SYSTEM_PROMPT}
 
-[USER PROMPT]: ${userPrompt}
-[GPT-4o OUTPUT]: ${gpt4o || 'MISSING'}
-[GEMINI OUTPUT]: ${gemini || 'MISSING'}
-[CLAUDE OUTPUT]: ${claude || 'MISSING'}
-[LLAMA OUTPUT]: ${llama || 'MISSING'}
+[USER PROMPT]: ${cleanPrompt}
+[GPT-4o OUTPUT]: ${cleanGpt || 'MISSING'}
+[GEMINI OUTPUT]: ${cleanGem || 'MISSING'}
+[CLAUDE OUTPUT]: ${cleanCla || 'MISSING'}
+[LLAMA OUTPUT]: ${cleanLla || 'MISSING'}
 `;
 
   try {
@@ -86,20 +94,25 @@ ${SYSTEM_PROMPT}
     const score = scoreMatch ? parseInt(scoreMatch[1]) * 10 : 50;
 
     const insertScan = db.prepare('INSERT INTO scans (input, score, verdict, summary, full_report) VALUES (?, ?, ?, ?, ?)');
-    insertScan.run(userPrompt || 'Deep Audit', score, score > 70 ? 'CLEAN' : 'MODERATE', 'Comparison Analysis', report);
+    insertScan.run(cleanPrompt.substring(0, 500) || 'Deep Audit', score, score > 70 ? 'CLEAN' : 'MODERATE', 'Comparison Analysis', report);
 
     res.json({ report, score });
   } catch (error) {
     const errMsg = error.response?.data?.error?.message || error.message;
-    res.status(500).json({ error: "Gemini Engine Error: " + errMsg });
+    console.error("Gemini Error:", errMsg);
+    res.status(500).json({ error: "Gemini Engine Error: " + escapeHtml(errMsg) });
   }
 });
 
 app.get('/api/history', (req, res) => {
-  const scans = db.prepare('SELECT * FROM scans ORDER BY created_at DESC LIMIT 50').all();
-  res.json(scans);
+  try {
+    const scans = db.prepare('SELECT * FROM scans ORDER BY created_at DESC LIMIT 50').all();
+    res.json(scans);
+  } catch (err) {
+    res.status(500).json({ error: "Database error." });
+  }
 });
 
 app.listen(PORT, () => {
-  console.log(`HalluciNet running on http://localhost:${PORT} [Gemini BYOK Mode Enabled]`);
+  console.log(`HalluciNet running on http://localhost:${PORT} [SECURE MODE ACTIVE]`);
 });
