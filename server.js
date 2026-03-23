@@ -44,7 +44,15 @@ STEP 1 — INPUT UNDERSTANDING
 STEP 2 — PER-MODEL HALLUCINATION AUDIT
 STEP 3 — CROSS-MODEL CONSISTENCY MATRIX
 STEP 4 — HALLUCINATION PATTERN CLASSIFICATION
-STEP 5 — AGGREGATE SCORING DASHBOARD
+STEP 5 — AGGREGATE SCORING DASHBOARD:
+For each model (GPT-4o, Gemini, Claude, Llama), provide a Confidence Score (0-100%).
+Also provide an overall GLOBAL CONFIDENCE score for the consolidated analysis.
+Format strictly as: 
+- GPT-4o Confidence: [SCORE]%
+- Gemini Confidence: [SCORE]%
+- Claude Confidence: [SCORE]%
+- Llama Confidence: [SCORE]%
+- GLOBAL CONFIDENCE: [SCORE]%
 STEP 6 — RISK ADVISORY
 STEP 7 — CORRECTED SYNTHESIS
 `;
@@ -90,8 +98,10 @@ ${SYSTEM_PROMPT}
     }
 
     const report = response.data.candidates[0].content.parts[0].text;
-    const scoreMatch = report.match(/(\d+)\/10/);
-    const score = scoreMatch ? parseInt(scoreMatch[1]) * 10 : 50;
+    
+    // Extract GLOBAL CONFIDENCE
+    const globalScoreMatch = report.match(/GLOBAL CONFIDENCE:\s*(\d+)%/i);
+    const score = globalScoreMatch ? parseInt(globalScoreMatch[1]) : 50;
 
     const insertScan = db.prepare('INSERT INTO scans (input, score, verdict, summary, full_report) VALUES (?, ?, ?, ?, ?)');
     insertScan.run(cleanPrompt.substring(0, 500) || 'Deep Audit', score, score > 70 ? 'CLEAN' : 'MODERATE', 'Comparison Analysis', report);
