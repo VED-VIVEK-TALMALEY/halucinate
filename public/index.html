@@ -22,13 +22,35 @@
     --text-sub:    #888888;
     --radius:      16px;
     --radius-lg:   24px;
+    --font-story:  'Playfair Display', serif;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 400; font-size: 18px; min-height: 100vh; overflow-x: hidden; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 400; font-size: 18px; min-height: 100vh; overflow-x: hidden; transition: background 0.5s, color 0.5s; }
   
+  /* Kid Mode Overrides */
+  body.kid-mode {
+    --bg: #fdf6e3;
+    --surface: #ffffff;
+    --surface2: #f5edde;
+    --border: #e0d5ba;
+    --text: #2c3e50;
+    --text-muted: #5d6d7e;
+    --gold: #f39c12;
+    --gold-light: #f1c40f;
+  }
+  body.kid-mode .section-title { color: #2c3e50; font-size: 80px; text-align: center; }
+  body.kid-mode .detector-card { box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-color: var(--border); }
+  body.kid-mode .detector-textarea { border-color: #dcdde1; font-size: 22px; color: #34495e; background: #fff; }
+  body.kid-mode .btn-primary { background: #3498db; color: #fff; font-size: 24px; padding: 24px; }
+  body.kid-mode .btn-primary:hover { background: #2980b9; }
+
   nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 24px 64px; background: rgba(5,5,5,0.9); backdrop-filter: blur(30px); border-bottom: 2px solid var(--border); }
+  body.kid-mode nav { background: rgba(253, 246, 227, 0.9); }
   .nav-logo { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 900; color: var(--gold); letter-spacing: -1px; }
+
+  .mode-toggle { display: flex; align-items: center; gap: 12px; cursor: pointer; background: var(--surface2); padding: 8px 16px; border-radius: 100px; border: 1px solid var(--border); }
+  .mode-toggle span { font-size: 14px; font-weight: 600; text-transform: uppercase; }
 
   section { position: relative; z-index: 1; padding: 120px 64px; max-width: 1400px; margin: 0 auto; }
   .section-eyebrow { font-size: 14px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; }
@@ -36,20 +58,34 @@
 
   .detector-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 64px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
   .detector-input-area { padding: 48px; }
-  .detector-textarea { width: 100%; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius); padding: 20px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 18px; resize: vertical; min-height: 120px; margin-bottom: 24px; outline: none; transition: border-color 0.3s; }
-  .detector-textarea:focus { border-color: var(--gold); }
   
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  label { display: block; font-size: 14px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
-
-  .api-config { background: var(--surface2); border: 2px solid var(--gold-dim); padding: 32px; border-radius: var(--radius); margin-bottom: 40px; }
-  .api-input { width: 100%; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; padding: 16px; color: var(--gold); font-family: 'DM Mono', monospace; font-size: 16px; outline: none; margin-top: 12px; }
-
-  .btn-primary { background: var(--gold); color: #000; border: none; padding: 20px 48px; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-weight: 800; font-size: 20px; cursor: pointer; transition: 0.3s; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
-  .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 204, 0, 0.3); }
-
-  .report-display { font-family: 'DM Mono', monospace; font-size: 16px; line-height: 1.8; color: #eee; white-space: pre-wrap; background: var(--bg); padding: 40px; border-radius: var(--radius); border: 2px solid var(--border); margin: 48px; display: none; }
+  .input-grid-item { position: relative; width: 100%; margin-bottom: 24px; }
+  .confidence-badge { position: absolute; top: -14px; right: 14px; background: var(--gold); color: #000; padding: 6px 16px; border-radius: 30px; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 900; display: none; z-index: 10; box-shadow: 0 8px 20px rgba(0,0,0,0.4); border: 2px solid #000; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .confidence-badge.high { background: var(--green); }
+  .confidence-badge.medium { background: var(--amber); }
+  .confidence-badge.low { background: var(--red); color: white; }
   
+  .detector-textarea { width: 100%; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius); padding: 24px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 19px; resize: vertical; min-height: 140px; margin-bottom: 0px; outline: none; transition: 0.3s; }
+  .detector-textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(255, 204, 0, 0.1); }
+  
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  label { display: block; font-size: 13px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; letter-spacing: 1px; }
+
+  .api-config { background: var(--surface2); border: 2px solid var(--gold-dim); padding: 32px; border-radius: var(--radius); margin-bottom: 40px; display: flex; flex-direction: column; gap: 8px; }
+  .api-input { width: 100%; background: var(--bg); border: 2px solid var(--border); border-radius: 12px; padding: 18px; color: var(--gold); font-family: 'DM Mono', monospace; font-size: 16px; outline: none; margin-top: 4px; transition: 0.3s; }
+  .api-input:focus { border-color: var(--gold); }
+
+  .btn-primary { background: var(--gold); color: #000; border: none; padding: 26px 48px; border-radius: 14px; font-family: 'DM Sans', sans-serif; font-weight: 900; font-size: 22px; cursor: pointer; transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1); width: 100%; text-transform: uppercase; letter-spacing: 2px; }
+  .btn-primary:hover { background: var(--gold-light); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(255, 204, 0, 0.2); }
+
+  .report-display { font-family: 'DM Mono', monospace; font-size: 15px; line-height: 1.8; color: #ddd; white-space: pre-wrap; background: var(--bg); padding: 48px; border-radius: var(--radius); border: 2px solid var(--border); margin: 48px; display: none; }
+  
+  /* Story View specific */
+  .story-view { display: none; background: #fff; color: #1a1a1a; padding: 80px; border-radius: var(--radius-lg); border: 12px solid #f1f2f6; margin: 48px; box-shadow: 0 40px 100px rgba(0,0,0,0.15); max-height: 85vh; overflow-y: auto; scroll-behavior: smooth; font-family: 'Playfair Display', serif; position: relative; }
+  .story-view::before { content: '📖'; position: absolute; top: 30px; left: 50%; transform: translateX(-50%); font-size: 40px; opacity: 0.5; }
+  .story-view h2 { font-size: 54px; margin-bottom: 48px; text-align: center; color: #2c3e50; font-weight: 900; }
+  .story-view p { font-size: 28px; line-height: 1.7; margin-bottom: 32px; color: #333; }
+
   .confidence-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin: 48px; display: none; }
   .confidence-card { background: var(--surface2); border: 2px solid var(--border); padding: 32px; border-radius: var(--radius); text-align: center; transition: transform 0.3s; }
   .confidence-card:hover { transform: scale(1.05); border-color: var(--gold-dim); }
@@ -67,33 +103,61 @@
 
 <nav>
   <div class="nav-logo">HallucinNet</div>
+  <div class="mode-toggle" onclick="toggleKidMode()">
+    <span>Kid Mode</span>
+    <input type="checkbox" id="kidModeToggle" style="width: 20px; height: 20px; cursor: pointer;">
+  </div>
 </nav>
 
 <section style="padding-top: 140px;">
-  <div class="section-eyebrow">BYOK Mode (Gemini Free Tier)</div>
-  <h2 class="section-title">Deep Model Auditing</h2>
+  <div class="section-eyebrow">Professional AI Auditor</div>
+  <h2 class="section-title" id="mainTitle">Deep Model Auditing</h2>
   
-  <div class="api-config">
+  <div class="api-config" id="apiConfig">
     <label style="color: var(--gold)">Google Gemini API Key (Required)</label>
     <input type="password" class="api-input" id="apiKey" placeholder="AIzaSy..." />
     <p style="font-size: 10px; color: var(--text-sub); margin-top: 8px;">
       Get your free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--gold)">Google AI Studio</a>. 
-      Supports 15 requests per minute for free.
     </p>
   </div>
 
   <div class="detector-card">
-    <div class="detector-input-area">
-      <label>User Prompt</label>
-      <textarea class="detector-textarea" id="userPrompt" placeholder="Question asked to the models..."></textarea>
+    <div class="detector-input-area" id="inputArea">
+      <label>User Prompt / Story Idea</label>
+      <textarea class="detector-textarea" id="userPrompt" placeholder="What story should I check or generate?"></textarea>
+      
       <div class="grid-2">
-        <div><label>GPT-4o</label><textarea class="detector-textarea" id="gpt4o" placeholder="Paste response..."></textarea></div>
-        <div><label>Gemini</label><textarea class="detector-textarea" id="gemini" placeholder="Paste response..."></textarea></div>
-        <div><label>Claude</label><textarea class="detector-textarea" id="claude" placeholder="Paste response..."></textarea></div>
-        <div><label>Llama</label><textarea class="detector-textarea" id="llama" placeholder="Paste response..."></textarea></div>
+        <div class="input-grid-item">
+          <label>GPT-4o</label>
+          <div class="confidence-badge" id="badgeGpt4o">Confidence: --%</div>
+          <textarea class="detector-textarea" id="gpt4o" placeholder="Paste response..."></textarea>
+        </div>
+        <div class="input-grid-item">
+          <label>Gemini</label>
+          <div class="confidence-badge" id="badgeGemini">Confidence: --%</div>
+          <textarea class="detector-textarea" id="gemini" placeholder="Paste response..."></textarea>
+        </div>
+        <div class="input-grid-item">
+          <label>Claude</label>
+          <div class="confidence-badge" id="badgeClaude">Confidence: --%</div>
+          <textarea class="detector-textarea" id="claude" placeholder="Paste response..."></textarea>
+        </div>
+        <div class="input-grid-item">
+          <label>Llama</label>
+          <div class="confidence-badge" id="badgeLlama">Confidence: --%</div>
+          <textarea class="detector-textarea" id="llama" placeholder="Paste response..."></textarea>
+        </div>
       </div>
-      <button class="btn-primary" onclick="runAudit()">Run 7-Step Deep Audit →</button>
+      
+      <button class="btn-primary" id="auditBtn" onclick="runAudit()">Run Deep Audit & Story Check →</button>
     </div>
+
+    <div class="story-view" id="storyView">
+      <h2 id="storyTitle">The Magic Story</h2>
+      <div id="storyContent"></div>
+      <button class="btn-primary" style="margin-top: 40px; width: auto;" onclick="closeStory()">← Back to Auditor</button>
+    </div>
+
     <div class="confidence-grid" id="confidenceGrid">
       <div class="confidence-card"><h4>GPT-4o</h4><div class="score" id="scoreGpt4o">--%</div></div>
       <div class="confidence-card"><h4>Gemini</h4><div class="score" id="scoreGemini">--%</div></div>
@@ -116,9 +180,21 @@
 </section>
 
 <script>
+function toggleKidMode() {
+  const isKid = document.getElementById('kidModeToggle').checked;
+  document.body.classList.toggle('kid-mode', isKid);
+  document.getElementById('mainTitle').textContent = isKid ? "Magical Story Reader" : "Deep Model Auditing";
+  document.getElementById('apiConfig').style.display = isKid ? 'none' : 'block';
+}
+
+function closeStory() {
+  document.getElementById('storyView').style.display = 'none';
+  document.getElementById('inputArea').style.display = 'block';
+}
+
 async function runAudit() {
-  const apiKey = document.getElementById('apiKey').value;
-  if (!apiKey) { alert('Please enter your Google Gemini API Key for real analysis.'); return; }
+  const apiKey = document.getElementById('apiKey').value || 'placeholder'; // Fallback for testing if .env has it
+  const isKid = document.getElementById('kidModeToggle').checked;
 
   const data = {
     apiKey: apiKey,
@@ -131,9 +207,12 @@ async function runAudit() {
 
   const reportEl = document.getElementById('reportDisplay');
   const gridEl = document.getElementById('confidenceGrid');
+  const storyView = document.getElementById('storyView');
+  const inputArea = document.getElementById('inputArea');
+
   reportEl.style.display = 'block';
   gridEl.style.display = 'none';
-  reportEl.textContent = 'Contacting Gemini Analysis Engine (Step 1 of 7)...';
+  reportEl.textContent = isKid ? 'Magical fairies are reading the stories...' : 'Contacting Gemini Analysis Engine (Step 1 of 7)...';
 
   try {
     const res = await fetch('/api/analyze-comparison', {
@@ -152,13 +231,60 @@ async function runAudit() {
     const llamaScore = result.report.match(/Llama Confidence:\s*(\d+)%/i);
     const globalScore = result.report.match(/GLOBAL CONFIDENCE:\s*(\d+)%/i);
 
-    document.getElementById('scoreGpt4o').textContent = (gptScore ? gptScore[1] : '--') + '%';
-    document.getElementById('scoreGemini').textContent = (geminiScore ? geminiScore[1] : '--') + '%';
-    document.getElementById('scoreClaude').textContent = (claudeScore ? claudeScore[1] : '--') + '%';
-    document.getElementById('scoreLlama').textContent = (llamaScore ? llamaScore[1] : '--') + '%';
-    document.getElementById('scoreGlobal').textContent = (globalScore ? globalScore[1] : result.score) + '%';
+    const sGpt = (gptScore ? gptScore[1] : '--') + '%';
+    const sGem = (geminiScore ? geminiScore[1] : '--') + '%';
+    const sCla = (claudeScore ? claudeScore[1] : '--') + '%';
+    const sLla = (llamaScore ? llamaScore[1] : '--') + '%';
+    const sGlo = (globalScore ? globalScore[1] : result.score) + '%';
+
+    // Update main grid
+    document.getElementById('scoreGpt4o').textContent = sGpt;
+    document.getElementById('scoreGemini').textContent = sGem;
+    document.getElementById('scoreClaude').textContent = sCla;
+    document.getElementById('scoreLlama').textContent = sLla;
+    document.getElementById('scoreGlobal').textContent = sGlo;
     
-    gridEl.style.display = 'grid';
+    // Update badges (User Story 6)
+    const updateBadge = (id, scoreStr) => {
+      const badge = document.getElementById(id);
+      if (!scoreStr || scoreStr === '--') {
+          badge.style.display = 'none';
+          return;
+      }
+      const score = parseInt(scoreStr);
+      badge.textContent = `Confidence: ${score}%`;
+      badge.className = 'confidence-badge';
+      if (score > 80) badge.classList.add('high');
+      else if (score > 50) badge.classList.add('medium');
+      else badge.classList.add('low');
+      badge.style.display = 'block';
+    };
+
+    updateBadge('badgeGpt4o', gptScore ? gptScore[1] : '--');
+    updateBadge('badgeGemini', geminiScore ? geminiScore[1] : '--');
+    updateBadge('badgeClaude', claudeScore ? claudeScore[1] : '--');
+    updateBadge('badgeLlama', llamaScore ? llamaScore[1] : '--');
+
+    // Handle Story Mode (User Story 7)
+    if (isKid) {
+      // Extract synthesis (Step 7)
+      const storyParts = result.report.split(/STEP 7\s*—\s*CORRECTED SYNTHESIS/i);
+      if (storyParts.length > 1) {
+        let storyText = storyParts[1].trim();
+        // Remove markdown or leading dashes if Gemini adds them
+        storyText = storyText.replace(/^[\s\-\*#]+/, '');
+        document.getElementById('storyContent').innerHTML = storyText.split('\n\n').map(p => `<p>${p.trim()}</p>`).join('');
+        inputArea.style.display = 'none';
+        storyView.style.display = 'block';
+        reportEl.style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        gridEl.style.display = 'grid';
+      }
+    } else {
+      gridEl.style.display = 'grid';
+    }
+    
     loadHistory();
   } catch (e) {
     reportEl.textContent = 'Audit Failed: ' + e.message;
@@ -166,23 +292,33 @@ async function runAudit() {
 }
 
 async function loadHistory() {
-  const res = await fetch('/api/history');
-  const data = await res.json();
-  const tbody = document.getElementById('historyBody');
-  tbody.innerHTML = '';
-  data.forEach(r => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${new Date(r.created_at).toLocaleTimeString()}</td>
-      <td>${r.input.substring(0, 50)}...</td>
-      <td style="color: var(--gold)">${r.score}%</td>
-      <td>Deep Audit (Gemini)</td>
-    `;
-    tbody.appendChild(tr);
-  });
+  try {
+    const res = await fetch('/api/history');
+    const data = await res.json();
+    const tbody = document.getElementById('historyBody');
+    tbody.innerHTML = '';
+    data.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${new Date(r.created_at).toLocaleTimeString()}</td>
+        <td>${escapeHtml(r.input.substring(0, 50))}...</td>
+        <td style="color: var(--gold)">${r.score}%</td>
+        <td>Deep Audit</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {}
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 window.onload = loadHistory;
 </script>
+</body>
+</html>
 </body>
 </html>
